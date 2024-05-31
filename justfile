@@ -11,4 +11,4 @@ default:
 
 # Run rust project and build for docker
 run:
-    . run_docker.sh
+    bash run_docker.sh

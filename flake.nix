@@ -38,7 +38,7 @@
         };
         defaultPackage = dockerImage;
         devShell = pkgs.mkShell {
-          name = "Notes App"
+          name = "Notes App";
           buildInputs =
             [ (rustVersion.override { extensions = [ "rust-src" ]; }) ];
           packages = with pkgs; [ just ];
