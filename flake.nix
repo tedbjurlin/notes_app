@@ -10,38 +10,28 @@
       let
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system overlays; };
-        rustVersion = pkgs.rust-bin.stable.latest.default;
-
-        rustPlatform = pkgs.makeRustPlatform {
-          cargo = rustVersion;
-          rustc = rustVersion;
-        };
-
-        myRustBuild = rustPlatform.buildRustPackage {
-          pname =
-            "notes_app"; # make this what ever your cargo.toml package.name is
-          version = "0.1.0";
-          src = ./.; # the folder with the cargo.toml
-
-          cargoLock.lockFile = ./Cargo.lock;
-        };
-
-        dockerImage = pkgs.dockerTools.buildImage {
-          name = "notes_app";
-          config = { Cmd = [ "${myRustBuild}/bin/notes_app" ]; };
-        };
+        rustVersion = pkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
+          extensions = [ "rust-src" "rust-analyzer" ];
+        });
 
       in {
-        packages = {
-          rustPackage = myRustBuild;
-          docker = dockerImage;
-        };
-        defaultPackage = dockerImage;
-        devShell = pkgs.mkShell {
+        devShells.default = pkgs.mkShell rec {
           name = "Notes App";
-          buildInputs =
-            [ (rustVersion.override { extensions = [ "rust-src" ]; }) ];
-          packages = with pkgs; [ just ];
+          buildInputs = with pkgs; [
+              rustVersion
+              pkg-config
+              openssl
+              libxkbcommon
+              xorg.libX11
+              xorg.libXcursor
+              xorg.libxcb
+              xorg.libXi
+              libGL
+            ];
+          packages = with pkgs; [
+            just
+          ];
+          LD_LIBRARY_PATH = "${nixpkgs.lib.makeLibraryPath buildInputs}";
         };
       });
 }
